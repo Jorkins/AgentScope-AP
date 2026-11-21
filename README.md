@@ -98,10 +98,10 @@ cd backend
 - 真正跑 Agent 对话前，需在 `.env` 填入至少一个模型 API Key（`DASHSCOPE_API_KEY` 等）。
 - `AUTH_ENABLED=false` 可退回阶段1（无 token 透传 `X-User-ID`），便于本地联调。
 
-## 关注公众号
+## 关注作者
 
-作者：**码上栈记**
+如果你对 AI 及本项目感兴趣，欢迎关注我的微信公众号 **码上栈记**，将持续带来更多高质量文章和干货。
 
 <p align="center">
-  <img src="docs/images/wechat-qrcode.jpg" alt="微信公众号：码上栈记" width="200">
+  <img src="docs/images/wechat-follow-banner@2x.png" alt="微信搜一搜：码上栈记" width="480">
 </p>
