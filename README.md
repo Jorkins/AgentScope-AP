@@ -66,7 +66,7 @@ cd frontend; pnpm install; pnpm dev
 - ✅ MinIO/S3 对象存储：`BLOB_BACKEND=s3` 默认接入，docker-compose 提供 MinIO 与桶/策略初始化；本地 Blob 保留为可切换后端。
 - ✅ 混合知识库：MinIO 原文 + Milvus 语义召回 + PostgreSQL 关键词召回/发布可见性 + RRF 融合；Qdrant 保留回滚路径，索引重建/迁移/回滚脚本齐备。
 
-## 真实运行截图
+## 运行截图
 
 | ![登录后首页](frontend/scripts/artifacts/00-after-login.png)<br><sub>登录后首页 · Agent 列表</sub> | ![聊天](frontend/scripts/artifacts/01-chat.png)<br><sub>聊天 · Agent 对话</sub> |
 | --- | --- |
