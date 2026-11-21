@@ -66,6 +66,17 @@ cd frontend; pnpm install; pnpm dev
 - ✅ MinIO/S3 对象存储：`BLOB_BACKEND=s3` 默认接入，docker-compose 提供 MinIO 与桶/策略初始化；本地 Blob 保留为可切换后端。
 - ✅ 混合知识库：MinIO 原文 + Milvus 语义召回 + PostgreSQL 关键词召回/发布可见性 + RRF 融合；Qdrant 保留回滚路径，索引重建/迁移/回滚脚本齐备。
 
+## 真实运行截图
+
+Playwright 真实浏览器遍历验收截图（注册 → 登录 → 各功能页面，Console 零错误，10/10 通过）：
+
+| ![登录后首页](frontend/scripts/artifacts/00-after-login.png)<br><sub>登录后首页 · Agent 列表</sub> | ![聊天](frontend/scripts/artifacts/01-chat.png)<br><sub>聊天 · Agent 对话</sub> |
+| --- | --- |
+| ![SOP 列表](frontend/scripts/artifacts/02-sop-list.png)<br><sub>SOP 流程列表</sub> | ![SOP 编辑器](frontend/scripts/artifacts/03-sop-editor.png)<br><sub>SOP 步骤编辑器</sub> |
+| ![凭证](frontend/scripts/artifacts/04-credential.png)<br><sub>模型凭证</sub> | ![MCP](frontend/scripts/artifacts/05-mcp.png)<br><sub>MCP 市场 / 绑定</sub> |
+| ![知识库](frontend/scripts/artifacts/06-knowledge.png)<br><sub>知识库</sub> | ![日程](frontend/scripts/artifacts/07-schedule.png)<br><sub>日程</sub> |
+| ![Skill](frontend/scripts/artifacts/08-skill.png)<br><sub>Skill</sub> | ![频道](frontend/scripts/artifacts/09-channel.png)<br><sub>频道</sub> |
+
 ## SOP 标准流程
 
 内核 `sop_router` 默认挂载，前端自研三页面：
