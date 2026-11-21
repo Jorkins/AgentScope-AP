@@ -5,7 +5,7 @@
 ## 运行
 
 ```bash
-# 在仓库根先起依赖：docker compose up -d postgres redis qdrant
+# 在仓库根先起依赖：docker compose up -d postgres redis milvus minio minio-init
 # 并配置根 .env（至少一个模型 API Key）
 
 cd backend
@@ -22,7 +22,7 @@ uv pip install --python .venv -e .
 
 ## 结构
 
-- `app/main.py`：装配 storage(PostgreSQL) / message_bus(Redis) / vector_store(Qdrant) / workspace(本地) / 知识库，并把平台壳注入 `create_app`。
+- `app/main.py`：装配 storage(PostgreSQL) / message_bus(Redis) / vector_store(Milvus，Qdrant 可回滚) / blob(MinIO/S3) / workspace(本地隔离) / 混合知识库，并把平台壳注入 `create_app`。
 - `app/config.py`：集中配置，读取根 `.env` 与 `backend/.env`。
 - `app/platform/`：平台壳
   - `models.py`：`ap_users` / `ap_tenants` / `ap_memberships` / `ap_resource_shares`

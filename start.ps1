@@ -3,8 +3,8 @@
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-Write-Host "==> 启动依赖环境 (PostgreSQL/Redis/Qdrant)" -ForegroundColor Cyan
-docker compose -f "$root/docker-compose.yml" up -d postgres redis qdrant
+Write-Host "==> 启动依赖环境 (PostgreSQL/Redis/Milvus/MinIO)" -ForegroundColor Cyan
+docker compose -f "$root/docker-compose.yml" up -d postgres redis milvus minio minio-init
 
 if (-not (Test-Path "$root/.env")) {
     Copy-Item "$root/.env.example" "$root/.env"

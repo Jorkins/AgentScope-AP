@@ -4,18 +4,16 @@
 
 ## 架构
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="diagram/agentscope-ap-architecture/architecture@2x.png">
+  <img src="diagram/agentscope-ap-architecture/architecture.light@2x.png" alt="AgentScope-AP 系统架构图">
+</picture>
+
 - **内核**：AgentScope `create_app`（PyPI 正式包 `agentscope==2.0.12`），提供 Agent/会话/知识库/MCP/Skill/渠道全部路由。
 - **平台壳** `backend/app/platform`：JWT 认证（注入 `X-User-ID`）、多租户资源访问策略、Redis 缓存、平台路由。
+- **运行时装配** `backend/app/runtime.py`：storage=PostgreSQL、message_bus=Redis、blob=MinIO/S3（默认 `BLOB_BACKEND=s3`）、vector=Milvus（默认 `VECTOR_BACKEND=milvus`，Qdrant 可回滚）、workspace=本地（用户 × Agent 隔离）。
+- **混合知识库**：PostgreSQL 关键词召回 + Milvus 语义召回 → RRF 融合 → 发布可见性过滤，UI 与 Agent 共用同一检索逻辑。
 - **前端**：复用官方 `web_ui`（React 19 + Vite + shadcn + Tailwind），新增登录页与 `Authorization` 头。
-
-```
-frontend(React/Vite :5173) --Authorization Bearer--> backend(FastAPI :8000)
-                                                              |
-        JwtAuthMiddleware 校验 JWT -> 覆盖注入 X-User-ID ------> AgentScope create_app 内核路由
-                                                              |
-        platform 壳: ap_users/ap_tenants/ap_memberships/ap_resource_shares (PostgreSQL)
-        内核: storage=PostgreSQL, message_bus=Redis, vector_store=Qdrant, workspace=本地
-```
 
 ## 快速启动
 
@@ -32,8 +30,8 @@ cp .env.example .env   # 然后编辑 .env
 或分步：
 
 ```powershell
-# 依赖（PostgreSQL/Redis/Qdrant）
-docker compose up -d postgres redis qdrant
+# 依赖（PostgreSQL/Redis/Milvus/MinIO；Qdrant 为 legacy 可选，默认不启动）
+docker compose up -d postgres redis milvus minio minio-init
 
 # 后端
 cd backend; uv venv .venv; uv pip install --python .venv -e .
@@ -52,17 +50,21 @@ cd frontend; pnpm install; pnpm dev
 |------|------|------|
 | 前端 | 5173 | Vite dev |
 | 后端 | 8000 | FastAPI |
-| PostgreSQL | 5432 | 主库 |
+| PostgreSQL | 5432 | 主库（平台表 + 内核表 + 关键词召回） |
 | Redis | **6380** | 本机 6379 被 Windows 原生 Redis 占用，故映射 6380 |
-| Qdrant | 6333/6334 | 向量库 |
+| Milvus | 19530/9091 | 向量库（语义召回），依赖内置 etcd |
+| MinIO | 9000/9001 | S3 兼容对象存储（API / 控制台） |
+| Qdrant | 6333/6334 | 向量库（legacy profile，可回滚后端，默认不启动） |
 
 ## 当前状态
 
-- ✅ 阶段1：单体后端（PG + RedisBus + Qdrant + 知识库 + 本地工作区）+ 官方前端。
+- ✅ 阶段1：单体后端（PG + RedisBus + 知识库 + 本地工作区）+ 官方前端。
 - ✅ 阶段2：JWT 认证 + 多租户（`TenantResourceAccessPolicy`）+ 登录页 + Authorization 头。
 - ✅ 阶段2 后续：服务级团队（explorer/coder 角色蓝图）+ Skill/MCP 市场（ClawHub / GitHub MCP Registry）。
 - ✅ 阶段3：SOP 标准流程（步骤编排 + Agent/人工验收 + 失败重试 + 运行监控），自研前端三页面。
-- ⏳ MinIO/S3 对象存储：镜像在本网络拉取受限（daocloud 403），暂用内核默认本地 blob，后续接入。
+- ✅ 阶段3 后续：工作区「用户 × Agent」隔离 + Skill/MCP 按用户绑定白名单，含双用户真实浏览器验收。
+- ✅ MinIO/S3 对象存储：`BLOB_BACKEND=s3` 默认接入，docker-compose 提供 MinIO 与桶/策略初始化；本地 Blob 保留为可切换后端。
+- ✅ 混合知识库：MinIO 原文 + Milvus 语义召回 + PostgreSQL 关键词召回/发布可见性 + RRF 融合；Qdrant 保留回滚路径，索引重建/迁移/回滚脚本齐备。
 
 ## SOP 标准流程
 
