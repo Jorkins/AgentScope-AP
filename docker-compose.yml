@@ -1,0 +1,149 @@
+name: agentscope-ap
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ap-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ap_password}
+      POSTGRES_DB: ${POSTGRES_DB:-agentscope_ap}
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ap} -d ${POSTGRES_DB:-agentscope_ap}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: ap-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6380:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    profiles: ["legacy"]
+    image: qdrant/qdrant:latest
+    container_name: ap-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrantdata:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6333; printf \"GET /healthz HTTP/1.0\\r\\n\\r\\n\" >&3; grep -q \"200 OK\" <&3'"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.25
+    container_name: ap-milvus-etcd
+    restart: unless-stopped
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: "1000"
+      ETCD_QUOTA_BACKEND_BYTES: "4294967296"
+      ETCD_SNAPSHOT_COUNT: "50000"
+    command: etcd -advertise-client-urls=http://ap-milvus-etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    volumes:
+      - milvusetcd:/etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  milvus:
+    image: milvusdb/milvus:v2.6.13
+    container_name: ap-milvus
+    restart: unless-stopped
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: ap-milvus-etcd:2379
+      COMMON_STORAGETYPE: local
+      COMMON_SECURITY_AUTHORIZATIONENABLED: "true"
+      COMMON_SECURITY_DEFAULTROOTPASSWORD: ${MILVUS_ROOT_PASSWORD:-root}
+    depends_on:
+      milvus-etcd:
+        condition: service_healthy
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    volumes:
+      - milvusdata:/var/lib/milvus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 5s
+      start_period: 60s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: ap-minio
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-ap_minio_root}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-ap_minio_root_password}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc alias set local http://localhost:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD >/dev/null 2>&1 && mc ready local || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  minio-init:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    container_name: ap-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-ap_minio_root}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-ap_minio_root_password}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-ap_minio}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-ap_minio_password}
+      S3_BUCKET: ${S3_BUCKET:-ap-knowledge}
+    volumes:
+      - ./deploy/minio/policy.json:/etc/ap/policy.json:ro
+    entrypoint: >-
+      /bin/sh -c 'set -e;
+      mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+      mc mb --ignore-existing "local/$${S3_BUCKET}";
+      mc anonymous set none "local/$${S3_BUCKET}";
+      mc admin user add local "$${S3_ACCESS_KEY}" "$${S3_SECRET_KEY}";
+      while IFS= read -r line; do printf "%s\n" "$${line//ap-knowledge/$${S3_BUCKET}}"; done < /etc/ap/policy.json > /tmp/ap-policy.json;
+      mc admin policy create local ap-knowledge-rw /tmp/ap-policy.json;
+      mc admin policy attach local ap-knowledge-rw --user "$${S3_ACCESS_KEY}"'
+
+volumes:
+  pgdata:
+  redisdata:
+  qdrantdata:
+  milvusdata:
+  milvusetcd:
+  miniodata:

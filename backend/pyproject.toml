@@ -1,0 +1,40 @@
+[project]
+name = "agentscope-ap-backend"
+version = "0.1.0"
+description = "AgentScope-AP 多 Agent 平台后端（create_app 内核 + platform 平台壳）"
+requires-python = ">=3.12"
+dependencies = [
+    "agentscope[service,storage-sql,storage-redis,vdb-qdrant,rag,channel,tools,a2a]==2.0.12",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.29",
+    "redis>=5.0",
+    "qdrant-client>=1.11",
+    "pymilvus>=2.6,<3",
+    "aioboto3>=13",
+    "alembic>=1.14,<2",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "pyjwt>=2.8",
+    "bcrypt>=4.0",
+    "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3,<9",
+    "pytest-asyncio>=0.24,<1",
+    "aiosqlite>=0.20,<1",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]

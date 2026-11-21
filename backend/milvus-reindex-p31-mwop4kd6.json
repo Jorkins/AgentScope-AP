@@ -1,0 +1,26 @@
+[
+  {
+    "knowledge_base_id": "509e4fc953c14e098372ab0fa835f9cd",
+    "collection": "kb_509e4fc953c14e098372ab0fa835f9cd",
+    "indexed": 0,
+    "skipped": 3,
+    "expected_chunks": 3,
+    "actual_chunks": 3,
+    "documents": {
+      "6039a9f25bcf4eb184aabd53d3291858": {
+        "expected": 1,
+        "actual": 1
+      },
+      "25b28bac9522449fbd33b105f0c53455": {
+        "expected": 1,
+        "actual": 1
+      },
+      "d656b8d64c764d109feca406cfb965fc": {
+        "expected": 1,
+        "actual": 1
+      }
+    },
+    "smoke_results": 3,
+    "failures": []
+  }
+]

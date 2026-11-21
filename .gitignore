@@ -1,0 +1,29 @@
+# 环境
+.env
+*.local
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# 工作区 / 数据
+workspace/
+*.log
+
+# 编辑器 / 本地工具数据
+.qoder/
+
+# 公众号文章素材
+post-to-wechat/
+
+# 系统
+.DS_Store
+Thumbs.db
