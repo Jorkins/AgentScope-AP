@@ -68,8 +68,6 @@ cd frontend; pnpm install; pnpm dev
 
 ## 真实运行截图
 
-Playwright 真实浏览器遍历验收截图（注册 → 登录 → 各功能页面，Console 零错误，10/10 通过）：
-
 | ![登录后首页](frontend/scripts/artifacts/00-after-login.png)<br><sub>登录后首页 · Agent 列表</sub> | ![聊天](frontend/scripts/artifacts/01-chat.png)<br><sub>聊天 · Agent 对话</sub> |
 | --- | --- |
 | ![SOP 列表](frontend/scripts/artifacts/02-sop-list.png)<br><sub>SOP 流程列表</sub> | ![SOP 编辑器](frontend/scripts/artifacts/03-sop-editor.png)<br><sub>SOP 步骤编辑器</sub> |
@@ -99,3 +97,11 @@ cd backend
 
 - 真正跑 Agent 对话前，需在 `.env` 填入至少一个模型 API Key（`DASHSCOPE_API_KEY` 等）。
 - `AUTH_ENABLED=false` 可退回阶段1（无 token 透传 `X-User-ID`），便于本地联调。
+
+## 关注公众号
+
+作者：**码上栈记**
+
+<p align="center">
+  <img src="docs/images/wechat-qrcode.jpg" alt="微信公众号：码上栈记" width="200">
+</p>
